@@ -53,19 +53,96 @@ namespace OP_Character_Generator
             lowestFound = lowestSoFar;
         }
 
+        static long GetLong(string prompt)
+        {
+            Console.Write(prompt);
+            long returnVal = 0;
+            do
+            {
+                string input = Console.ReadLine();
+                try
+                {
+                    returnVal = Int64.Parse(input);
+                }
+                catch(FormatException)
+                {
+                    Console.WriteLine("Enter a positive integer");
+                    continue;
+                }
+                catch(OverflowException)
+                {
+                    Console.WriteLine("Number is too large");
+                    continue;
+                }
+                if(returnVal < 1)
+                {
+                    Console.WriteLine("Enter a positive integer");
+                    continue;
+                }
+            } while (false);
+            return returnVal;
+        }
+
+        static int GetInt(string prompt)
+        {
+            Console.Write(prompt);
+            int returnVal = 0;
+            do
+            {
+                string input = Console.ReadLine();
+                try
+                {
+                    returnVal = Int32.Parse(input);
+                }
+                catch (FormatException)
+                {
+                    Console.WriteLine("Enter a positive integer");
+                    continue;
+                }
+                catch (OverflowException)
+                {
+                    Console.WriteLine("Number is too large");
+                    continue;
+                }
+                if(returnVal < 1)
+                {
+                    Console.WriteLine("Enter a positive integer");
+                    continue;
+                }
+            } while (false);
+            return returnVal;
+        }
+
         static void Main(string[] args)
         {
             Stopwatch timer = new Stopwatch();
+            long total;
+            int threads;
+#if DEBUG
+            total = (long) Math.Pow(10, 7);
+            threads = 10;
+#else
+            total = GetLong("How many characters would you like to generate? ");
+            if(total >= 1000000)
+            {
+                Console.WriteLine("Warning: generating large numbers of characters may take a while.");
+            }
+            threads = GetInt("How many threads would you like to use? ");
+            if(threads > 5)
+            {
+                Console.WriteLine("Warning: starting many threads may impact performance of the rest of your system. " +
+                                  "Performance will return once characters are done being generated." +
+                                  "Close this window if performance becomes unacceptable on the rest of your system.");
+            }
+#endif
             timer.Start();
-            long total = (long) Math.Pow(10, 10) * 5;
-            const int threads = 10;
             StatBlock[] highestPerThread = new StatBlock[threads];
             StatBlock[] lowestPerThread = new StatBlock[threads];
             Parallel.For(0, threads, i =>
                 {
                     Console.WriteLine("Starting thread {0}", i);
-                    int saveIndex = i;
-                    GenerateBatch(total / threads, out highestPerThread[saveIndex], out lowestPerThread[saveIndex]);
+                    GenerateBatch(total / threads, out highestPerThread[i], out lowestPerThread[i]);
+                    Console.WriteLine("Thread {0} complete", i);
                 });
             StatBlock highestBlockGenerated = new StatBlock();
             foreach(var sb in highestPerThread)
